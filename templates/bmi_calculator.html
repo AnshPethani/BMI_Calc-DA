@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>BMI Calculator</h1>
+        <form id="bmiForm">
+            <label for="gender">Gender:</label>
+            <select id="gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+
+            <label for="height">Height (cm):</label>
+            <input type="number" id="height" required>
+
+            <label for="weight">Weight (kg):</label>
+            <input type="number" id="weight" required>
+
+            <button type="submit">Calculate BMI</button>
+        </form>
+        <div id="result"></div>
+        <br>
+        <button onclick="window.location.href='/'">Back to Home</button>
+    </div>
+
+    <script>
+        document.getElementById('bmiForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent the default form submission
+
+            const gender = document.getElementById('gender').value;
+            const height = document.getElementById('height').value; // cm
+            const weight = document.getElementById('weight').value; // kg
+
+            const response = await fetch('/calculate_bmi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ gender, height, weight })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const bmi = data.bmi.toFixed(2);
+                const index = data.index;
+                const category = getBMICategory(index);
+                
+                document.getElementById('result').innerHTML = 
+                    `Your BMI: ${bmi} 
+                    <br> 
+                    Index: ${index} (${category})<br><br>` + getHealthTips();
+            } else {
+                document.getElementById('result').innerHTML = 'Error calculating BMI.';
+            }
+        });
+
+        function getBMICategory(index) {
+            if (index == 0) return 'Extremely Underweight';
+            else if (index == 1) return 'Underweight';
+            else if (index == 2) return 'Healthy weight';
+            else if (index == 3) return 'Overweight';
+            else if (index == 4) return 'Obese';
+            else return 'Severely obese';
+        }
+
+        function getHealthTips() {
+            return `
+                <strong>The body mass index (BMI) range is:</strong><br>
+                Under 18.5: Underweight<br>
+                18.5–24.9: Healthy weight<br>
+                25–29.9: Overweight<br>
+                30–39.9: Obese<br>
+                40 or above: Severely obese<br><br>
+                
+                BMI is a screening tool that estimates weight status. Too much or too little weight can be a health risk.<br>
+                You can use a BMI calculator to estimate your weight status. The CDC has BMI calculators for adults, children, and teens.<br>
+                You can speak with your doctor to learn more about your current health status, future risks, and ways to improve health.
+            `;
+        }
+    </script>
+</body>
+</html>
